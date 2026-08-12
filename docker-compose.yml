@@ -1,0 +1,61 @@
+# ==========================================================================
+# Sobe o bank-users-service (Quarkus rodando em Java 25 dentro do container)
+# junto com suas duas bases: PostgreSQL (usuários/chaves/saldo) e MongoDB
+# (lista de contatos). O host só precisa de Docker — nada de JDK 25.
+#
+#   docker compose up --build
+#
+# API em http://localhost:8080 (ex.: GET /users, GET /users/1/contacts)
+# ==========================================================================
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: bank_users
+      POSTGRES_USER: bank
+      POSTGRES_PASSWORD: bank
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bank -d bank_users"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  bank-users-service:
+    build: ./bank-users-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    environment:
+      # PostgreSQL (relacional): usuários, chaves pix e saldo
+      QUARKUS_DATASOURCE_DB_KIND: postgresql
+      QUARKUS_DATASOURCE_USERNAME: bank
+      QUARKUS_DATASOURCE_PASSWORD: bank
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/bank_users
+      # MongoDB (documento): lista de contatos
+      QUARKUS_MONGODB_CONNECTION_STRING: mongodb://mongo:27017
+      QUARKUS_MONGODB_DATABASE: bank_users
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
+  mongo_data:

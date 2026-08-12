@@ -1,0 +1,58 @@
+### bank-users-service — exemplos de uso
+### Rode o serviço com: ./mvnw quarkus:dev   (precisa de Docker para o Dev Services subir Postgres + Mongo)
+### Base URL
+@base = http://localhost:8080
+
+### Listar todos os usuários (com saldo e chaves pix)
+GET {{base}}/users
+
+### Buscar um usuário
+GET {{base}}/users/1
+
+### Saldo de um usuário
+GET {{base}}/users/1/saldo
+
+### Criar usuário
+POST {{base}}/users
+Content-Type: application/json
+
+{
+  "nome": "Carla Nova",
+  "email": "carla.nova@bancoufrj.com",
+  "senha": "senha123",
+  "saldoInicial": 1000.00
+}
+
+### Listar chaves pix de um usuário
+GET {{base}}/users/1/pix-keys
+
+### Adicionar chave pix
+POST {{base}}/users/1/pix-keys
+Content-Type: application/json
+
+{
+  "tipo": "TELEFONE",
+  "valor": "+5521911112222"
+}
+
+### --- Lista de contatos (MongoDB) ---
+
+### Contatos recentes do usuário 1 (colunas: nome, chavePix, ...)
+GET {{base}}/users/1/contacts
+
+### Buscar por nome alternativo (ex.: "mãe") — espelha consulta_banco_de_dados
+GET {{base}}/users/1/contacts/search?termo=mãe&por=nomeAlternativo
+
+### Buscar contato por nome
+GET {{base}}/users/1/contacts/search?termo=carla&por=nome
+
+### Salvar contato ao enviar um Pix (com permissão do usuário)
+POST {{base}}/users/1/contacts
+Content-Type: application/json
+
+{
+  "nome": "Pedro Rocha",
+  "chavePix": "pedro.rocha@gmail.com",
+  "banco": "Nubank",
+  "nomesAlternativos": ["primo", "amigo"]
+}

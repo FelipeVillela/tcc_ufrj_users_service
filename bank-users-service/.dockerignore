@@ -1,0 +1,8 @@
+# Build multi-stage: o código-fonte é compilado DENTRO da imagem (Java 25),
+# então o fonte precisa ir para o contexto — só barramos o lixo de build.
+target/
+.git/
+.gitignore
+*.iml
+.idea/
+.vscode/
