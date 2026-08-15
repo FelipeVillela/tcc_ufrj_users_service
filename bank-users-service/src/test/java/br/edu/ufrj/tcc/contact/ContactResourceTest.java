@@ -57,8 +57,8 @@ class ContactResourceTest {
     @DisplayName("GET /contacts devolve 200 e os contatos recentes do usuário")
     void listar() {
         Mockito.when(service.listarRecentes(1L)).thenReturn(List.of(
-                contato(ID_CARLA, "Carla Pereira", "carla.pereira@gmail.com", "Banco do Brasil", List.of("mãe")),
-                contato(ID_JOAO, "João Silva", "11122233344", "Nubank", List.of("irmão"))));
+                contato(ID_CARLA, "Carla Pereira", "carla.pereira@gmail.com", "Banco Azul", List.of("mãe")),
+                contato(ID_JOAO, "João Silva", "11122233344", "Banco Roxo", List.of("irmão"))));
 
         given()
                 .when().get("/users/1/contacts")
@@ -68,7 +68,7 @@ class ContactResourceTest {
                 .body("[0].id", is(ID_CARLA))
                 .body("[0].nome", is("Carla Pereira"))
                 .body("[0].chavePix", is("carla.pereira@gmail.com"))
-                .body("[0].banco", is("Banco do Brasil"))
+                .body("[0].banco", is("Banco Azul"))
                 .body("[0].nomesAlternativos", contains("mãe"))
                 .body("[0].criadoEm", notNullValue())
                 .body("[0].usadoPorUltimoEm", notNullValue())
@@ -91,7 +91,7 @@ class ContactResourceTest {
     @DisplayName("GET /contacts/search repassa termo e campo de busca ao service")
     void buscar() {
         Mockito.when(service.buscar(1L, "mãe", "nomesAlternativos")).thenReturn(List.of(
-                contato(ID_CARLA, "Carla Pereira", "carla.pereira@gmail.com", "Banco do Brasil", List.of("mãe"))));
+                contato(ID_CARLA, "Carla Pereira", "carla.pereira@gmail.com", "Banco Azul", List.of("mãe"))));
 
         given()
                 .queryParam("termo", "mãe")
@@ -139,7 +139,7 @@ class ContactResourceTest {
     @DisplayName("POST /contacts devolve 201 e repassa o destinatário ao service")
     void salvar() {
         Mockito.when(service.salvarAoEnviar(Mockito.eq(1L), Mockito.any())).thenReturn(
-                contato(ID_JOAO, "João Silva", "11122233344", "Nubank", List.of("irmão")));
+                contato(ID_JOAO, "João Silva", "11122233344", "Banco Roxo", List.of("irmão")));
 
         given()
                 .contentType(ContentType.JSON)
@@ -147,7 +147,7 @@ class ContactResourceTest {
                         {
                           "nome": "João Silva",
                           "chavePix": "11122233344",
-                          "banco": "Nubank",
+                          "banco": "Banco Roxo",
                           "nomesAlternativos": ["irmão"]
                         }
                         """)
@@ -163,7 +163,7 @@ class ContactResourceTest {
         Mockito.verify(service).salvarAoEnviar(Mockito.eq(1L), enviado.capture());
         assertEquals("João Silva", enviado.getValue().nome());
         assertEquals("11122233344", enviado.getValue().chavePix());
-        assertEquals("Nubank", enviado.getValue().banco());
+        assertEquals("Banco Roxo", enviado.getValue().banco());
         assertEquals(List.of("irmão"), enviado.getValue().nomesAlternativos());
     }
 

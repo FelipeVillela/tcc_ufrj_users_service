@@ -23,6 +23,10 @@ public class BusinessException extends RuntimeException {
         return new BusinessException(Response.Status.CONFLICT, message);
     }
 
+    public static BusinessException unauthorized(String message) {
+        return new BusinessException(Response.Status.UNAUTHORIZED, message);
+    }
+
     public Response.Status getStatus() {
         return status;
     }

@@ -120,8 +120,8 @@ class ContactServiceTest {
     @DisplayName("listarRecentes filtra pelo dono e ordena por usadoPorUltimoEm decrescente")
     void listarRecentes() {
         PanacheMock.mock(Contact.class);
-        Contact carla = contato("507f1f77bcf86cd799439011", "Carla Pereira", "carla@gmail.com", "BB", List.of("mãe"));
-        Contact joao = contato("507f1f77bcf86cd799439012", "João Silva", "11122233344", "Nubank", List.of("irmão"));
+        Contact carla = contato("507f1f77bcf86cd799439011", "Carla Pereira", "carla@gmail.com", "Banco Azul", List.of("mãe"));
+        Contact joao = contato("507f1f77bcf86cd799439012", "João Silva", "11122233344", "Banco Roxo", List.of("irmão"));
         Mockito.when(Contact.<Contact>find(Mockito.eq(LISTAR_RECENTES), Mockito.any(Sort.class), params(DONO)))
                 .thenReturn(query);
         Mockito.when(query.list()).thenReturn(List.of(carla, joao));
@@ -146,7 +146,7 @@ class ContactServiceTest {
     @DisplayName("buscar sem termo cai no comportamento de listarRecentes")
     void buscarSemTermo() {
         PanacheMock.mock(Contact.class);
-        Contact carla = contato("507f1f77bcf86cd799439011", "Carla Pereira", "carla@gmail.com", "BB", List.of("mãe"));
+        Contact carla = contato("507f1f77bcf86cd799439011", "Carla Pereira", "carla@gmail.com", "Banco Azul", List.of("mãe"));
         Mockito.when(Contact.<Contact>find(Mockito.eq(LISTAR_RECENTES), Mockito.any(Sort.class), params(DONO)))
                 .thenReturn(query);
         Mockito.when(query.list()).thenReturn(List.of(carla));
@@ -162,7 +162,7 @@ class ContactServiceTest {
     @DisplayName("buscar por nome monta filtro do dono + regex case-insensitive em 'nome'")
     void buscarPorNome() {
         PanacheMock.mock(Contact.class);
-        Contact carla = contato("507f1f77bcf86cd799439011", "Carla Pereira", "carla@gmail.com", "BB", List.of("mãe"));
+        Contact carla = contato("507f1f77bcf86cd799439011", "Carla Pereira", "carla@gmail.com", "Banco Azul", List.of("mãe"));
         Mockito.when(Contact.<Contact>find(Mockito.any(Document.class))).thenReturn(query);
         Mockito.when(query.list()).thenReturn(List.of(carla));
 
@@ -180,7 +180,7 @@ class ContactServiceTest {
     @DisplayName("buscar por nomeAlternativo usa o campo 'nomesAlternativos'")
     void buscarPorNomeAlternativo() {
         PanacheMock.mock(Contact.class);
-        Contact carla = contato("507f1f77bcf86cd799439011", "Carla Pereira", "carla@gmail.com", "BB", List.of("mãe"));
+        Contact carla = contato("507f1f77bcf86cd799439011", "Carla Pereira", "carla@gmail.com", "Banco Azul", List.of("mãe"));
         Mockito.when(Contact.<Contact>find(Mockito.any(Document.class))).thenReturn(query);
         Mockito.when(query.list()).thenReturn(List.of(carla));
 
@@ -221,12 +221,12 @@ class ContactServiceTest {
         Mockito.when(query.<Contact>firstResult()).thenReturn(null);
 
         Contact salvo = service.salvarAoEnviar(DONO,
-                new SaveContactRequest("Ana Souza", "ana@outlook.com", "Itaú", List.of("prima")));
+                new SaveContactRequest("Ana Souza", "ana@outlook.com", "Banco Laranja", List.of("prima")));
 
         assertEquals(DONO, salvo.ownerUserId);
         assertEquals("Ana Souza", salvo.nome);
         assertEquals("ana@outlook.com", salvo.chavePix);
-        assertEquals("Itaú", salvo.banco);
+        assertEquals("Banco Laranja", salvo.banco);
         assertEquals(List.of("prima"), salvo.nomesAlternativos);
         assertNotNull(salvo.criadoEm);
         assertNotNull(salvo.usadoPorUltimoEm);
@@ -240,7 +240,7 @@ class ContactServiceTest {
         Mockito.when(query.<Contact>firstResult()).thenReturn(null);
 
         Contact salvo = service.salvarAoEnviar(DONO,
-                new SaveContactRequest("Ana Souza", "ana@outlook.com", "Itaú", null));
+                new SaveContactRequest("Ana Souza", "ana@outlook.com", "Banco Laranja", null));
 
         assertNotNull(salvo.nomesAlternativos);
         assertTrue(salvo.nomesAlternativos.isEmpty());
@@ -251,7 +251,7 @@ class ContactServiceTest {
     void salvarContatoExistente() {
         PanacheMock.mock(Contact.class);
         Contact existente = Mockito.spy(
-                contato("507f1f77bcf86cd799439011", "Rafaela", "rafa@gmail.com", "Nubank", List.of("irmã", "rafa")));
+                contato("507f1f77bcf86cd799439011", "Rafaela", "rafa@gmail.com", "Banco Roxo", List.of("irmã", "rafa")));
         Mockito.doNothing().when(existente).update();
         Instant usoAnterior = Instant.now().minus(3, ChronoUnit.DAYS);
         existente.usadoPorUltimoEm = usoAnterior;
@@ -259,11 +259,11 @@ class ContactServiceTest {
         Mockito.when(query.<Contact>firstResult()).thenReturn(existente);
 
         Contact salvo = service.salvarAoEnviar(DONO,
-                new SaveContactRequest("Rafaela Fernandes", "rafa@gmail.com", "Inter", List.of("rafa", "madrinha")));
+                new SaveContactRequest("Rafaela Fernandes", "rafa@gmail.com", "Banco Vermelho", List.of("rafa", "madrinha")));
 
         assertSame(existente, salvo);
         assertEquals("Rafaela Fernandes", salvo.nome);
-        assertEquals("Inter", salvo.banco);
+        assertEquals("Banco Vermelho", salvo.banco);
         assertEquals(List.of("irmã", "rafa", "madrinha"), salvo.nomesAlternativos);
         assertTrue(salvo.usadoPorUltimoEm.isAfter(usoAnterior), "o 'usado por último' deve avançar");
         Mockito.verify(existente).update();
@@ -274,7 +274,7 @@ class ContactServiceTest {
     void salvarContatoExistenteSemBanco() {
         PanacheMock.mock(Contact.class);
         Contact existente = Mockito.spy(
-                contato("507f1f77bcf86cd799439011", "Rafaela", "rafa@gmail.com", "Nubank", List.of("irmã")));
+                contato("507f1f77bcf86cd799439011", "Rafaela", "rafa@gmail.com", "Banco Roxo", List.of("irmã")));
         Mockito.doNothing().when(existente).update();
         Mockito.when(Contact.<Contact>find(POR_CHAVE, DONO, "rafa@gmail.com")).thenReturn(query);
         Mockito.when(query.<Contact>firstResult()).thenReturn(existente);
@@ -282,7 +282,7 @@ class ContactServiceTest {
         Contact salvo = service.salvarAoEnviar(DONO,
                 new SaveContactRequest("Rafaela Fernandes", "rafa@gmail.com", null, null));
 
-        assertEquals("Nubank", salvo.banco);
+        assertEquals("Banco Roxo", salvo.banco);
         assertEquals(List.of("irmã"), salvo.nomesAlternativos);
     }
 
@@ -291,14 +291,14 @@ class ContactServiceTest {
     void salvarContatoExistenteSemNomesAlternativos() {
         PanacheMock.mock(Contact.class);
         Contact existente = Mockito.spy(
-                contato("507f1f77bcf86cd799439011", "Rafaela", "rafa@gmail.com", "Nubank", List.of()));
+                contato("507f1f77bcf86cd799439011", "Rafaela", "rafa@gmail.com", "Banco Roxo", List.of()));
         existente.nomesAlternativos = null;
         Mockito.doNothing().when(existente).update();
         Mockito.when(Contact.<Contact>find(POR_CHAVE, DONO, "rafa@gmail.com")).thenReturn(query);
         Mockito.when(query.<Contact>firstResult()).thenReturn(existente);
 
         Contact salvo = service.salvarAoEnviar(DONO,
-                new SaveContactRequest("Rafaela Fernandes", "rafa@gmail.com", "Nubank", List.of("rafa")));
+                new SaveContactRequest("Rafaela Fernandes", "rafa@gmail.com", "Banco Roxo", List.of("rafa")));
 
         assertEquals(List.of("rafa"), salvo.nomesAlternativos);
     }

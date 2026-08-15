@@ -66,6 +66,11 @@ docker compose down -v                      # ...e apaga os volumes (banco zerad
 Os dados de exemplo são populados no boot pelo `DevDataSeeder` (idempotente).
 
 ```bash
+# login (sem segurança) — devolve o usuário; use o id dele nas chamadas seguintes
+# o seed cria teste1@email.com (id 1) e teste2@email.com (id 2), senha123 nos dois
+curl -X POST http://localhost:8080/login -H 'Content-Type: application/json' \
+  -d '{"email":"teste1@email.com","senha":"senha123"}'
+
 # usuários, saldo e chaves pix (PostgreSQL)
 curl http://localhost:8080/users
 curl http://localhost:8080/users/1
@@ -89,6 +94,8 @@ Os testes unitários dos *resources* e dos *services* ficam em
 
 | Classe de teste | Cobre |
 |---|---|
+| `LoginServiceTest` | autenticação: sucesso, senha errada e e-mail inexistente (401 com a mesma mensagem nos dois casos) |
+| `LoginResourceTest` | contrato HTTP de `/login`: 200 com o usuário, 401 sem sucesso, 400 sem credenciais |
 | `UserServiceTest` | regras de usuário e chave Pix: 404 de usuário inexistente, 409 de e-mail e de chave duplicada, saldo padrão zero, remoção só pelo próprio dono |
 | `UserResourceTest` | contrato HTTP de `/users`: status codes, validação de payload (400) e o JSON de erro |
 | `ContactServiceTest` | regras da lista de contatos: filtro montado para o Mongo, escape do termo de busca, ordenação por `usadoPorUltimoEm`, merge de `nomesAlternativos` |

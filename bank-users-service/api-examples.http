@@ -3,6 +3,34 @@
 ### Base URL
 @base = http://localhost:8080
 
+### Login (sem segurança — devolve o usuário para o front saber quem está usando)
+### O seed cria teste1@email.com (id 1) e teste2@email.com (id 2), senha123 nos dois
+POST {{base}}/login
+Content-Type: application/json
+
+{
+  "email": "teste1@email.com",
+  "senha": "senha123"
+}
+
+### Login do outro usuário (id 2, com a sua própria lista de contatos)
+POST {{base}}/login
+Content-Type: application/json
+
+{
+  "email": "teste2@email.com",
+  "senha": "senha123"
+}
+
+### Login com senha errada (401)
+POST {{base}}/login
+Content-Type: application/json
+
+{
+  "email": "teste1@email.com",
+  "senha": "senha-errada"
+}
+
 ### Listar todos os usuários (com saldo e chaves pix)
 GET {{base}}/users
 
@@ -53,6 +81,6 @@ Content-Type: application/json
 {
   "nome": "Pedro Rocha",
   "chavePix": "pedro.rocha@gmail.com",
-  "banco": "Nubank",
+  "banco": "Banco Verde",
   "nomesAlternativos": ["primo", "amigo"]
 }
