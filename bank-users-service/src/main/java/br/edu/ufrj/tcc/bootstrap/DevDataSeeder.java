@@ -65,7 +65,7 @@ public class DevDataSeeder {
         criarContato(ownerId, "Thiago Almeida", "thiago.almeida@empresa.com", "Bradesco",
                 List.of("colega de trabalho", "chefe"));
         criarContato(ownerId, "Sofia Castro", "55667788900", "Inter", List.of("vizinha"));
-        criarContato(ownerId, "Rafaela Fernandes", "rafa@gmail.com", "Nubank", List.of("amiga", "rafa"));
+        criarContato(ownerId, "Rafaela Fernandes", "rafa@gmail.com", "Nubank", List.of("irmã", "rafa"));
         LOG.infof("Seed: %d contatos criados para o usuário %d.", Contact.count(), ownerId);
     }
 

@@ -82,6 +82,49 @@ Os exemplos completos, incluindo os `POST`, estão em
 [bank-users-service/api-examples.http](bank-users-service/api-examples.http)
 (basta abrir no VS Code com a extensão REST Client).
 
+## Testes automatizados (JUnit)
+
+Os testes unitários dos *resources* e dos *services* ficam em
+`bank-users-service/src/test/java`:
+
+| Classe de teste | Cobre |
+|---|---|
+| `UserServiceTest` | regras de usuário e chave Pix: 404 de usuário inexistente, 409 de e-mail e de chave duplicada, saldo padrão zero, remoção só pelo próprio dono |
+| `UserResourceTest` | contrato HTTP de `/users`: status codes, validação de payload (400) e o JSON de erro |
+| `ContactServiceTest` | regras da lista de contatos: filtro montado para o Mongo, escape do termo de busca, ordenação por `usadoPorUltimoEm`, merge de `nomesAlternativos` |
+| `ContactResourceTest` | contrato HTTP de `/users/{userId}/contacts`, incluindo o `_id` do Mongo serializado em hexadecimal |
+
+São testes **de unidade**: os resources rodam com o service trocado por um mock
+(`@InjectMock`) e os services rodam com as consultas do Panache mockadas
+(`PanacheMock`), então nenhum teste depende do conteúdo dos bancos. Ainda
+assim o `@QuarkusTest` sobe a aplicação, e por isso **o Docker precisa estar de
+pé**: os Dev Services levantam um Postgres e um Mongo efêmeros enquanto a
+execução dura.
+
+### Com JDK 25 no host
+
+```bash
+cd bank-users-service && ./mvnw test
+```
+
+### Sem JDK 25 no host
+
+Mesma ideia do Dockerfile: o Maven roda dentro de um container com o JDK 25. O
+socket do Docker é montado para que os Dev Services consigam subir os bancos, e
+o `~/.m2` do host é reaproveitado para não rebaixar as dependências toda vez.
+
+Na raiz deste repositório (o que é montado em `/build` é o diretório do
+serviço, onde está o `pom.xml`):
+
+```bash
+docker run --rm --network host \
+  -u $(id -u):$(id -g) --group-add $(getent group docker | cut -d: -f3) \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v ~/.m2:/var/maven/.m2 -e MAVEN_CONFIG=/var/maven/.m2 \
+  -v "$PWD/bank-users-service":/build -w /build \
+  maven:3.9-eclipse-temurin-25 mvn -B -Duser.home=/var/maven test
+```
+
 ## Como o build funciona
 
 O [Dockerfile](bank-users-service/Dockerfile) é multi-stage e é ditado pelo
