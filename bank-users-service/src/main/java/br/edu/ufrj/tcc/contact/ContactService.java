@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.bson.Document;
@@ -63,12 +64,14 @@ public class ContactService {
 
     /**
      * Salva o destinatário na lista de contatos ao enviar um Pix (com a
-     * permissão do usuário). Se já existir um contato com a mesma chave,
-     * atualiza o "usado por último", o nome/banco e agrega novas palavras-chave.
+     * permissão do usuário). A chave Pix é normalizada (trim + caixa baixa)
+     * para deduplicação. Se já existir um contato com a mesma chave, atualiza o
+     * "usado por último", o nome/banco e agrega novas palavras-chave.
      */
     public Contact salvarAoEnviar(Long ownerUserId, SaveContactRequest req) {
+        String chavePix = normalizarChave(req.chavePix());
         Contact existente = Contact
-                .find("ownerUserId = ?1 and chavePix = ?2", ownerUserId, req.chavePix())
+                .find("ownerUserId = ?1 and chavePix = ?2", ownerUserId, chavePix)
                 .firstResult();
 
         if (existente != null) {
@@ -85,7 +88,7 @@ public class ContactService {
         Contact novo = new Contact();
         novo.ownerUserId = ownerUserId;
         novo.nome = req.nome();
-        novo.chavePix = req.chavePix();
+        novo.chavePix = chavePix;
         novo.banco = req.banco();
         novo.nomesAlternativos = req.nomesAlternativos() == null ? new ArrayList<>() : new ArrayList<>(req.nomesAlternativos());
         novo.persist();
@@ -97,6 +100,18 @@ public class ContactService {
         if (removidos == 0) {
             throw BusinessException.notFound("Contato " + contactId + " não encontrado para o usuário " + ownerUserId + ".");
         }
+    }
+
+    /**
+     * Normaliza a chave Pix para a deduplicação: remove espaços nas bordas e
+     * aplica caixa baixa, de modo que o mesmo contato não seja duplicado quando
+     * a chave é digitada com espaços ou em caixa diferente (ex.: e-mails).
+     * Chaves numéricas (CPF, telefone) não são afetadas pela caixa; a
+     * padronização de formato de telefone (com/sem +55) fica fora de escopo por
+     * risco de mesclagem indevida.
+     */
+    private static String normalizarChave(String chavePix) {
+        return chavePix == null ? null : chavePix.trim().toLowerCase(Locale.ROOT);
     }
 
     private static List<String> mesclarNomesAlternativos(List<String> atuais, List<String> novos) {

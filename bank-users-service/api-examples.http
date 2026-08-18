@@ -84,3 +84,23 @@ Content-Type: application/json
   "banco": "Banco Verde",
   "nomesAlternativos": ["primo", "amigo"]
 }
+
+### --- Diretório Pix (mockado — faz o papel do DICT) ---
+### As chaves abaixo não estão na agenda de contatos do seed, de propósito: são
+### destinatários "novos", para exercitar o fluxo de resolver um desconhecido
+### pela chave e salvá-lo como contato depois do envio.
+
+### Titular de uma chave de e-mail (200 — Padaria Pão Quente, Banco Amarelo)
+GET {{base}}/pix-directory/search?chave=padaria@pix.com
+
+### Titular de uma chave de telefone (200 — Marcos Andrade, Banco Verde)
+GET {{base}}/pix-directory/search?chave=21970001234
+
+### Titular de uma chave de CPF (200 — Juliana Ramos, Banco Roxo)
+GET {{base}}/pix-directory/search?chave=12345678900
+
+### A consulta ignora caixa e espaços nas bordas (200 — a mesma padaria)
+GET {{base}}/pix-directory/search?chave=Padaria@Pix.com
+
+### Chave fora do diretório (404 — daí o agente pede o nome ao usuário)
+GET {{base}}/pix-directory/search?chave=ninguem@pix.com

@@ -303,6 +303,37 @@ class ContactServiceTest {
         assertEquals(List.of("rafa"), salvo.nomesAlternativos);
     }
 
+    @Test
+    @DisplayName("salvarAoEnviar casa o contato existente ignorando caixa e espaços na chave")
+    void salvarNormalizaChaveNaBusca() {
+        PanacheMock.mock(Contact.class);
+        Contact existente = Mockito.spy(
+                contato("507f1f77bcf86cd799439011", "Padaria", "padaria@pix.com", "Banco Amarelo", List.of("padaria")));
+        Mockito.doNothing().when(existente).update();
+        // a busca deve usar a chave normalizada (trim + caixa baixa)
+        Mockito.when(Contact.<Contact>find(POR_CHAVE, DONO, "padaria@pix.com")).thenReturn(query);
+        Mockito.when(query.<Contact>firstResult()).thenReturn(existente);
+
+        Contact salvo = service.salvarAoEnviar(DONO,
+                new SaveContactRequest("Padaria Pão Quente", "  Padaria@Pix.com  ", "Banco Amarelo", List.of("zé")));
+
+        assertSame(existente, salvo);
+        assertEquals(List.of("padaria", "zé"), salvo.nomesAlternativos);
+    }
+
+    @Test
+    @DisplayName("salvarAoEnviar grava a chave normalizada ao criar um contato novo")
+    void salvarNovoNormalizaChaveGravada() {
+        PanacheMock.mock(Contact.class);
+        Mockito.when(Contact.<Contact>find(POR_CHAVE, DONO, "novo@pix.com")).thenReturn(query);
+        Mockito.when(query.<Contact>firstResult()).thenReturn(null);
+
+        Contact salvo = service.salvarAoEnviar(DONO,
+                new SaveContactRequest("Contato Novo", "  NOVO@Pix.com ", null, null));
+
+        assertEquals("novo@pix.com", salvo.chavePix);
+    }
+
     // ------------------------------------------------------------------
     // remover
     // ------------------------------------------------------------------
